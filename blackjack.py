@@ -160,7 +160,7 @@ class blackjack:
             for user in survived:
                 msg += "<@" + str(user.id) + "> with a score of " + str(self.sum_hand(self.players[user][1])) + " \n"
             if high >= 0:
-                msg += "Let's hear it for our winners with a score of " + str(high) + "! ( ')> \n"
+                msg += "Let's hear it for our winners with a score of " + str(high) + "! \n"
                 for elem in winners:
                     msg += "<@" + str(elem.id) + "> "
             else:
