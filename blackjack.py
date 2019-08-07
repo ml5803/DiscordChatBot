@@ -23,6 +23,9 @@ class blackjack:
         await self.bot.send_message(ctx.message.channel, "Say $start_bj when all the players have joined")
 
     async def on_reaction_add(self, reaction, user : discord.member ):
+        if self.in_game:
+            await self.bot.send_message(reaction.message.channel, "Sorry <@" + user.id + ">, a game is in progress. Join the next one! ( ')>")
+            return
         if (str(user) != "Sleepy#9088" and reaction.emoji == "✅"): #if not correct reaction, ignore
             if user not in self.players:
                 self.players[user] = [reaction.message, [], True, False]
@@ -90,10 +93,17 @@ class blackjack:
         return sum
 
     async def on_message(self, message):
+        message.content = message.content.lower()
         if str(message.author) != "Sleepy#9088": #don't respond to bot
+            if self.in_game and message.author not in self.players.keys() and (message.content == "hit" or message.content == "stay"):
+                await self.bot.send_message(message.channel, "You not even in the game! <@" + str(message.author.id) + ">")
+                return
             if self.in_game and self.players and self.players[message.author][2] == False: #if not on-going
                 print("he's done already")
                 await self.bot.send_message(message.author, "Stop it. You done!")
+                return
+            if not self.in_game and (message.content == "hit" or message.content == "stay"): #can't hit or stay before you even get your cards
+                await self.bot.send_message(message.author, "Yo! Relax... take a chill pill. We didn't start yet!")
                 return
             if message.content == "hit":
                 print(message.author, " has hit")
@@ -127,27 +137,37 @@ class blackjack:
             await self.game_over_check(message)
 
     async def game_over_check(self, message):
+        #clean up to display all at once
         if self.num_players == 0 and self.players:
             print("game over")
             await self.bot.send_message(self.players[message.author][0].channel, "Everyone has concluded. Let's check the stats!")
-            await self.bot.send_message(self.players[message.author][0].channel, "The following people busted: ")
             winners = []
+            busted = []
+            survived = []
             high = max([self.sum_hand(self.players[elem][1]) for elem in self.players.keys() if self.sum_hand(self.players[elem][1]) <= 21]+[-1])
             for key in self.players.keys():
-                if self.sum_hand(self.players[key][1]) == high:
+                if self.sum_hand(self.players[key][1]) == high: #if score = highest valid score, is a winner
                     winners.append(key)
-                if self.players[key][3]:
-                    await self.bot.send_message(self.players[message.author][0].channel, "<@"+ str(key.id) + ">")
-            await self.bot.send_message(self.players[message.author][0].channel, "The following people survived(?):")
-            for key in self.players.keys():
-                if not self.players[key][3]:
-                    await self.bot.send_message(self.players[message.author][0].channel, "<@" + str(key.id) + "> with a score of " + str(self.sum_hand(self.players[key][1])))
+                if self.players[key][3]: #if busted field is checked
+                    busted.append(key)
+                if not self.players[key][3]: #if not busted
+                    survived.append(key)
+            msg = "The following people busted: \n"
+
+            for user in busted:
+                msg += "<@" + str(user.id) + "> \n"
+            msg += "The following people survived (?)\n"
+            for user in survived:
+                msg += "<@" + str(user.id) + "> with a score of " + str(self.sum_hand(self.players[user][1])) + " \n"
             if high >= 0:
-                await self.bot.send_message(self.players[message.author][0].channel, "Let's hear it for our winners with a score of " + str(high) + "! ( ')> ")
+                msg += "Let's hear it for our winners with a score of " + str(high) + "! ( ')> \n"
+                for elem in winners:
+                    msg += "<@" + str(elem.id) + "> "
             else:
-                await self.bot.send_message(self.players[message.author][0].channel, "Hm... It doesn't look like anyone won. :/")
-            for elem in winners:
-                await self.bot.send_message(self.players[message.author][0].channel, "<@" + str(elem.id) + ">")
+               msg += "Hm... It doesn't look like anyone won. :/ \n"
+
+            await self.bot.send_message(self.players[message.author][0].channel, msg)
+
             self.players.clear()
             self.in_game = False
             self.num_players = 0

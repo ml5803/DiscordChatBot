@@ -77,7 +77,8 @@ async def ship(ctx, member: discord.Member = None):
                 await bot.say("*Psst. Am I invited to the wedding?*")
                 return
 
+#due to TTT and TTT2p using the same emojis, only 1 may be active at a time
 #bot.add_cog(TTT(bot))
 bot.add_cog(TTT2p(bot))
 bot.add_cog(blackjack(bot))
-bot.run("This my key, get your own :)")
+bot.run("This my number. Use your own!")
