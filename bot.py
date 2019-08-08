@@ -1,13 +1,11 @@
 import random
 import discord
-from tictactoe import TTT
 from tictactoe2p import TTT2p
 from blackjack import blackjack
-import asyncio
+from connectfour import connectFour
 from discord.ext import commands
 
-client = discord.Client()
-bot = commands.Bot(command_prefix=commands.when_mentioned_or('$'), description='Sleepy')
+bot = commands.Bot(command_prefix=commands.when_mentioned_or('$'))
 
 #check connection
 @bot.event
@@ -16,12 +14,12 @@ async def on_ready():
 
 @bot.command(pass_context=True)
 async def greet(ctx):
-    await bot.say("Hi <@" + str(ctx.message.author.id) + ">")
-    await bot.say("I'm SleepyBot!")
+    await ctx.send("Hi <@" + str(ctx.message.author.id) + ">")
+    await ctx.send("I'm Sleepybot!")
 
 @bot.command(pass_context=True)
 async def hug(ctx):
-    await bot.say("I hugs " + '<@' + str(ctx.message.author.id) + '>')
+    await ctx.send("I hugs " + '<@' + str(ctx.message.author.id) + '>')
 
 @bot.command(pass_context=True)
 async def slap(ctx):
@@ -34,14 +32,14 @@ async def slap(ctx):
 
     msg += 'with ' + items[random.randint(0, len(items) - 1)] + "!"
     if count == 0:
-        await bot.say("Fk you," + '<@' + str(ctx.message.author.id) + '> ' + ". Actually slap someone!")
+        await ctx.send('<@' + str(ctx.message.author.id) + '> ' + ", actually slap someone! or I'll show you my flipper ( ')>!")
     else:
-        await bot.say(msg)
+        await ctx.send(msg)
 
 @bot.command()
-async def roast():
+async def roast(ctx):
     roasts = ["no u", "screw u", "your forehead brighter than your future ;)"]
-    await bot.say(roasts[random.randint(0, len(roasts) - 1)])
+    await ctx.send(roasts[random.randint(0, len(roasts) - 1)])
 
 @bot.command(pass_context=True)
 async def ship(ctx, member: discord.Member = None):
@@ -50,35 +48,34 @@ async def ship(ctx, member: discord.Member = None):
     guy2 = members[random.randint(0, len(members) - 1)]
     if member is None:
         if guy1.name == guy2.name:
-            await bot.say("I ship " + guy1.name + " with " + guy2.name + "!")
-            await bot.say("No, that wasn't a mistake. My matchmaking software couldn't find you a match :'( .")
+            await ctx.send("I ship " + guy1.name + " with " + guy2.name + "!")
+            await ctx.send("No, that wasn't a mistake. My matchmaking software couldn't find you a match :'( .")
             return
         else:
-            await bot.say("I ship " + guy1.name + " with " + guy2.name + "!")
+            await ctx.send("I ship " + guy1.name + " with " + guy2.name + "!")
             return
     else:
         print(member.id)
         if member.id == "233795765728706561":
-            await bot.say("Sorry. He's taken. Back off my owner >:c")
+            await ctx.send("Sorry. He's taken. Back off my owner >:c")
             return
         if member.id == "416235862746202113":
-            await bot.say("I'm matched with " + '<@' + '233795765728706561' + '>. We both Sleepy and Bots!')
+            await ctx.send("I'm matched with " + '<@' + '233795765728706561' + '>. We ctxh Sleepy and ctxs!')
             return
         if member.name == guy1.name:
-            await bot.say("I'm sorry. I tried but it appears you are a lonely boi :'( .")
+            await ctx.send("I'm sorry. I tried but it appears you are a lonely boi :'( .")
             return
         else:
-            await bot.say('<@' + str(member.id) + '> is a perfect match with ' + guy1.name + "!")
+            await ctx.send('<@' + str(member.id) + '> is a perfect match with ' + guy1.name + "!")
             if (guy1.name == 'Sleepy'):
-                await bot.say("Wait. Hold up. I reject your reality and substitute my own! >:(")
-                await bot.say("Poof! You are now single!")
+                await ctx.send("Wait. Hold up. I reject your reality and substitute my own! >:(")
+                await ctx.send("Poof! You are now single!")
                 return
             else:
-                await bot.say("*Psst. Am I invited to the wedding?*")
+                await ctx.send("*Psst. Am I invited to the wedding?*")
                 return
 
-#due to TTT and TTT2p using the same emojis, only 1 may be active at a time
-#bot.add_cog(TTT(bot))
 bot.add_cog(TTT2p(bot))
 bot.add_cog(blackjack(bot))
-bot.run("This my number. Use your own!")
+bot.add_cog(connectFour(bot))
+bot.run("My code. Use your own")

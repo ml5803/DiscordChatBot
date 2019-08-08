@@ -1,4 +1,7 @@
-class blackjack:
+import discord
+from discord.ext import commands
+
+class blackjack(commands.Cog):
     import discord
     from discord.ext import commands
 
@@ -16,45 +19,46 @@ class blackjack:
     @commands.command(pass_context=True)
     async def bj(self,ctx):
         if self.in_game:
-            await self.bot.send_message(ctx.message.channel, "A game is already in progress.")
+            await ctx.message.channel.send("A game is already in progress.")
             return
-        msg = await self.bot.send_message(ctx.message.channel, "A game of BlackJack will start soon. React to join! ( ')> ")
-        await self.bot.add_reaction(msg, u"\u2705")  # check mark
-        await self.bot.send_message(ctx.message.channel, "Say $start_bj when all the players have joined")
+        msg = await ctx.message.channel.send( "A game of BlackJack will start soon. React to join! ( ')> \n"
+                                              "Say $start_bj when all the players have joined!")
+        await msg.add_reaction(u"\u2705")  # check mark
 
-    async def on_reaction_add(self, reaction, user : discord.member ):
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
         if self.in_game:
-            await self.bot.send_message(reaction.message.channel, "Sorry <@" + user.id + ">, a game is in progress. Join the next one! ( ')>")
+            await reaction.message.channel.send("Sorry <@" + user.id + ">, a game is in progress. Join the next one! ( ')>")
             return
-        if (str(user) != "Sleepy#9088" and reaction.emoji == "✅"): #if not correct reaction, ignore
+        if (str(user.id) != "416235862746202113" and reaction.emoji == "✅"): #if not bot and not correct reaction, ignore
             if user not in self.players:
                 self.players[user] = [reaction.message, [], True, False]
                 self.num_players+=1
                 print(user, " has been added.")
-            await self.bot.send_message(user,"You have joined the game of BlackJack! ( ')>")
-            await self.bot.send_message(reaction.message.channel, "<@" + str(user.id) + "> has joined the game")
+            await user.send("You have joined the game of BlackJack! ( ')>")
+            await reaction.message.channel.send( "<@" + str(user.id) + "> has joined the game")
             print(self.players , " are the players")
 
     @commands.command(pass_context=True)
     async def start_bj(self,ctx):
         print("BlackJack starting")
         if self.in_game:
-            await self.bot.send_message(ctx.message.channel, 'Game has already started.')
+            await ctx.message.channel.send('Game has already started.')
             return
         if self.num_players == 0:
-            await self.bot.send_message(ctx.message.channel, "Can't start with no players!")
+            await ctx.message.channel.send("Can't start with no players!")
             return
-        await self.bot.send_message(ctx.message.channel, 'The game of BlackJack is now starting!')
-        await self.bot.send_message(ctx.message.channel, "Check your DMs. I've sent your hands. ( ')> ")
+        await ctx.message.channel.send('The game of BlackJack is now starting!')
+        await ctx.message.channel.send("Check your DMs. I've sent your hands. ( ')> ")
         for elem in self.players.keys():
             self.players[elem][1].append(self.hit())
             self.players[elem][1].append(self.hit())
             card_str = ""
             for card in self.players[elem][1]:
                 card_str += card + " "
-            await self.bot.send_message(elem,"Respond with ** hit ** or ** stay ** to play. If you get over 21, you out!")
-            await self.bot.send_message(elem,"Your hand: " + card_str)
-            await self.bot.send_message(elem, self.sum_hand(self.players[elem][1]))
+            await elem.send("Respond with ** hit ** or ** stay ** to play. If you get over 21, you out!")
+            await elem.send("Your hand: " + card_str)
+            await elem.send(self.sum_hand(self.players[elem][1]))
         self.in_game = True
 
     @commands.command(pass_context=True)
@@ -62,7 +66,7 @@ class blackjack:
         self.in_game = False
         self.players.clear()
         self.num_players = 0
-        await self.bot.send_message(ctx.message.channel, "Game of BlackJack has stopped. Type $bj to start another!")
+        await ctx.message.channel.send("Game of BlackJack has stopped. Type $bj to start another!")
 
     def hit(self):
         import random
@@ -92,18 +96,21 @@ class blackjack:
                     sum += pos[1]
         return sum
 
+    @commands.Cog.listener()
     async def on_message(self, message):
+        if message.author not in self.players:
+            return
         message.content = message.content.lower()
-        if str(message.author) != "Sleepy#9088": #don't respond to bot
+        if message.author.id != 416235862746202113: #don't respond to bot
             if self.in_game and message.author not in self.players.keys() and (message.content == "hit" or message.content == "stay"):
-                await self.bot.send_message(message.channel, "You not even in the game! <@" + str(message.author.id) + ">")
+                await message.channel.send("You not even in the game! <@" + str(message.author.id) + ">")
                 return
             if self.in_game and self.players and self.players[message.author][2] == False: #if not on-going
                 print("he's done already")
-                await self.bot.send_message(message.author, "Stop it. You done!")
+                await message.author.send("Stop it. You done!")
                 return
             if not self.in_game and (message.content == "hit" or message.content == "stay"): #can't hit or stay before you even get your cards
-                await self.bot.send_message(message.author, "Yo! Relax... take a chill pill. We didn't start yet!")
+                await message.author.send("Yo! Relax... take a chill pill. We didn't start yet!")
                 return
             if message.content == "hit":
                 print(message.author, " has hit")
@@ -111,28 +118,28 @@ class blackjack:
                 card_str = ""
                 for card in self.players[message.author][1]:
                     card_str += card + " "
-                await self.bot.send_message(message.author, "Your hand: " + card_str)
+                await message.author.send("Your hand: " + card_str)
                 temp_sum = self.sum_hand(self.players[message.author][1])
-                await self.bot.send_message(message.author, "The sum of your current hand is: " + str(temp_sum))
+                await message.author.send("The sum of your current hand is: " + str(temp_sum))
                 if temp_sum == 21:
-                    await self.bot.send_message(message.author, "Not bad. Let's wait for others to finish.")
-                    await self.bot.send_message(self.players[message.author][0].channel, "<@" + str(message.author.id) + "> has concluded.")
+                    await message.author.send("Not bad. Let's wait for others to finish.")
+                    await self.players[message.author][0].channel.send("<@" + str(message.author.id) + "> has concluded.")
                     self.players[message.author][2] = False
                     self.players[message.author][3] = False
                     self.num_players-=1
                 if temp_sum > 21:
-                    await self.bot.send_message(message.author, "You got over 21! Busted. Ha. Scrub. Jk o.o. Please wait for other players to finish." )
+                    await message.author.send("You got over 21! Busted. Ha. Scrub. Jk o.o. Please wait for other players to finish." )
                     self.players[message.author][2] = False
                     self.players[message.author][3] = True
-                    await self.bot.send_message(self.players[message.author][0].channel, "<@" + str(message.author.id) + "> has concluded.")
+                    await self.players[message.author][0].channel.send("<@" + str(message.author.id) + "> has concluded.")
                     self.num_players -= 1
             if message.content == "stay":
                 print(message.author, " has stayed")
-                await self.bot.send_message(message.author, "What are you? My cousin, Chicken?  Bok bok! ( ')>")
-                await self.bot.send_message(message.author, "Let's wait for others to finish. Go back Khappa.")
+                await message.author.send("What are you? My cousin, Chicken?  Bok bok! ( ')>")
+                await message.author.send("Let's wait for others to finish. Go back Khappa.")
                 self.players[message.author][2] = False
                 self.players[message.author][3] = False
-                await self.bot.send_message(self.players[message.author][0].channel,"<@" + str(message.author.id) + "> has concluded.")
+                await self.players[message.author][0].channel.send("<@" + str(message.author.id) + "> has concluded.")
                 self.num_players -= 1
             await self.game_over_check(message)
 
@@ -140,7 +147,7 @@ class blackjack:
         #clean up to display all at once
         if self.num_players == 0 and self.players:
             print("game over")
-            await self.bot.send_message(self.players[message.author][0].channel, "Everyone has concluded. Let's check the stats!")
+            await self.players[message.author][0].channel.send("Everyone has concluded. Let's check the stats!")
             winners = []
             busted = []
             survived = []
@@ -166,12 +173,11 @@ class blackjack:
             else:
                msg += "Hm... It doesn't look like anyone won. :/ \n"
 
-            await self.bot.send_message(self.players[message.author][0].channel, msg)
+            await self.players[message.author][0].channel.send(msg)
 
             self.players.clear()
             self.in_game = False
             self.num_players = 0
-
 
     def user_hit(self,message):
         self.players[message.author][1].append(self.hit())

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-class TTT2p:
+class TTT2p(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.reactions = "↖⬆↗⬅⏺➡↙⬇↘"
@@ -15,13 +15,12 @@ class TTT2p:
     async def ttt2p_new(self,user1, user2, channel):
         response = "<@" + str(user1.id) + "> is playing " + "<@" + str(user2.id) + ">\n"
         response += "Go go: \n"
-        msg = await self.bot.send_message(channel, response)
+        msg = await channel.send(response)
         await self.makeButtons2p(msg)
         game_id = msg.id
         self.ttt2p_games[game_id] = [self.makeBoard(), str(user1.id),str(user2.id),1, msg]
         response = self.makeGridStr(self.ttt2p_games[game_id][0], response)
-        await self.bot.edit_message(msg, response)
-        print(game_id)
+        await msg.edit(content = response)
         print(self.ttt2p_games[game_id])
 
     def makeGridStr(self, lst, str):
@@ -43,19 +42,20 @@ class TTT2p:
         return board
 
     async def makeButtons2p(self, msg):
-        await self.bot.add_reaction(msg, u"\u2196")  # 0 tl
-        await self.bot.add_reaction(msg, u"\u2B06")  # 1 t
-        await self.bot.add_reaction(msg, u"\u2197")  # 2 tr
-        await self.bot.add_reaction(msg, u"\u2B05")  # 3 l
-        await self.bot.add_reaction(msg, u"\u23FA")  # 4 mid
-        await self.bot.add_reaction(msg, u"\u27A1")  # 5 r
-        await self.bot.add_reaction(msg, u"\u2199")  # 6 bl
-        await self.bot.add_reaction(msg, u"\u2B07")  # 7 b
-        await self.bot.add_reaction(msg, u"\u2198")  # 8 br
+        await msg.add_reaction(u"\u2196")  # 0 tl
+        await msg.add_reaction(u"\u2B06")  # 1 t
+        await msg.add_reaction(u"\u2197")  # 2 tr
+        await msg.add_reaction(u"\u2B05")  # 3 l
+        await msg.add_reaction(u"\u23FA")  # 4 mid
+        await msg.add_reaction(u"\u27A1")  # 5 r
+        await msg.add_reaction(u"\u2199")  # 6 bl
+        await msg.add_reaction(u"\u2B07")  # 7 b
+        await msg.add_reaction(u"\u2198")  # 8 br
 
+    @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
         if (str(user) != "Sleepy#9088" and reaction.emoji in self.reactions ):
-            game_id = str(reaction.message.id)
+            game_id = reaction.message.id
             curr_game = self.ttt2p_games[game_id]
             if curr_game[curr_game[3]]==str(user.id):
                 move = self.decodeMove(str(reaction.emoji))
@@ -78,20 +78,20 @@ class TTT2p:
             await self.boardUpdate(curr_game)
             if (self.checkWin(curr_game[0],'x')==2 or self.checkWin(curr_game[0],'o')==2):
                 response = "By the decree of SleepyBot, I declare <@" + str(user.id) + "> as the crowned penguin!"
-                await self.bot.delete_message(reaction.message)
-                await self.bot.send_message(reaction.message.channel, response)
+                await reaction.message.delete()
+                await reaction.message.channel.send(response)
                 del self.ttt2p_games[game_id]
             if (self.checkWin(curr_game[0],'x')==1):
                 response = "Game doo doo. No one won (')>!"
-                await self.bot.delete_message(reaction.message)
-                await self.bot.send_message(reaction.message.channel, response)
+                await reaction.message.delete()
+                await reaction.message.channel.send(response)
                 del self.ttt2p_games[game_id]
 
 
     async def boardUpdate(self,game):
         response = "<@" + game[1] + ">'s and <@" + game[2] +">" + " Game: \n"
         response = self.makeGridStr(game[0], response )
-        await self.bot.edit_message(game[4], response)
+        await game[4].edit(content = response)
 
     def decodeMove(self, emoji):
         dict = {
