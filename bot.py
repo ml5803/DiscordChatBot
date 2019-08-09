@@ -78,4 +78,4 @@ async def ship(ctx, member: discord.Member = None):
 bot.add_cog(TTT2p(bot))
 bot.add_cog(blackjack(bot))
 bot.add_cog(connectFour(bot))
-bot.run("NDE2MjM1ODYyNzQ2MjAyMTEz.DXEWZw.QMks3yCOpdyT1iZurcjgNjTvfF8")
+bot.run("Oops. My token. You use your own.")
