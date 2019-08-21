@@ -1,6 +1,7 @@
 import random
 import discord
 from tictactoe2p import TTT2p
+from music import Music, MusicPlayer
 from blackjack import blackjack
 from connectfour import connectFour
 from discord.ext import commands
@@ -78,4 +79,5 @@ async def ship(ctx, member: discord.Member = None):
 bot.add_cog(TTT2p(bot))
 bot.add_cog(blackjack(bot))
 bot.add_cog(connectFour(bot))
-bot.run("Oops. My token. You use your own.")
+bot.add_cog(Music(bot))
+bot.run("")
