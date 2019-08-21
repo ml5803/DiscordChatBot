@@ -131,5 +131,3 @@ class TTT2p(commands.Cog):
 
         #if game ongoing, return 0
         return 0
-
-
